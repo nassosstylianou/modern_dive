@@ -1,0 +1,95 @@
+---
+title: "Basic Regression"
+author: "Nassos Stylianou"
+date: "04/08/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(ggplot2, dplyr, moderndive, gapminder, skimr)
+```
+
+### What is data modelling?
+
+The fundamental premise of data modeling is to make explicit the relationship between:
+
+* an outcome variable $y$, also called a dependent variable and
+* an explanatory/predictor variable $x$, also called an independent variable or covariate.
+
+Another way to state this is using mathematical terminology: we will model the outcome variable $y$ as a function of the explanatory/predictor variable $x$.
+
+### What are the purposes of data modelling? 
+Why do we have two different labels, explanatory and predictor, for the variable $x$? That’s because roughly speaking data modeling can be used for two purposes:
+
+1. Modeling for prediction: You want to predict an outcome variable $y$ based on the information contained in a set of predictor variables. You don’t care so much about understanding how all the variables relate and interact, but so long as you can make good predictions about $y$, you’re fine. For example, if we know many individuals’ risk factors for lung cancer, such as smoking habits and age, can we predict whether or not they will develop lung cancer? Here we wouldn’t care so much about distinguishing the degree to which the different risk factors contribute to lung cancer, but instead only on whether or not they could be put together to make reliable predictions.
+
+2. Modeling for explanation: You want to explicitly describe the relationship between an outcome variable $y$ and a set of explanatory variables, determine the significance of any found relationships, and have measures summarizing these. Continuing our example from above, we would now be interested in describing the individual effects of the different risk factors and quantifying the magnitude of these effects. One reason could be to design an intervention to reduce lung cancer cases in a population, such as targeting smokers of a specific age group with an advertisement for smoking cessation programs. In this book, we’ll focus more on this latter purpose.
+
+## What is linear regression?
+
+Linear regression is one of the most commonly-used and easy-to-understand approaches to modeling. Linear regression involves:
+
+* an outcome variable $y$ that is numerical and
+* explanatory variables $\vec{x}$ that are either numerical or categorical.
+
+With linear regression there is always only one numerical outcome variable $y$ but we have choices on both the number and the type of explanatory variables $\vec{x}$ to use.
+
+In simple linear regression, we'll always have only one explanatory variable and this explanatory variable will be a single numerical explanatory variable $x$. 
+
+The variable $x$ could also a categorical explanatory variable $x$.
+
+
+```{r evals_lc_6.1, echo=FALSE}
+skimr::skim(evals)
+evals_lc_6.1 <- evals %>%
+  select(score, bty_avg, age)
+
+cor_score_age <- evals_lc_6.1 %>%
+    get_correlation(formula = score ~ age)
+cor_score_age
+
+ggplot(evals_lc_6.1, aes(x = score, y = age)) + geom_point() + geom_smooth(method = "lm", se = FALSE) + labs(title = "Relationship between age and teaching scores")
+
+```
+
+###Simple linear regression 
+
+The lm() function that "fits" the linear regression model is typically used as lm(y ~ x, data = data_frame_name) where:
+
+* y is the outcome variable, followed by a tilde (~). This is likely the key to the left of "1" on your keyboard. In our case, y is set to score.
+* x is the explanatory variable. In our case, x is set to bty_avg. We call the combination y ~ x a model formula. 
+
+```{r score_model}
+score_model <- lm(score ~ bty_avg, data = evals_lc_6.1)
+score_model
+```
+This output is telling us that the Intercept coefficient $b_0$ of the regression line is 3.8803 and the slope coefficient for by_avg is 0.0666. Therefore the blue regression line in Figure @ref(fig:numxplot4) is
+
+$$\widehat{\text{score}} = b_0 + b_{\text{bty_avg}} \cdot\text{bty_avg} = 3.8803 + 0.0666\cdot\text{ bty_avg}$$
+
+where:
+
+The intercept coefficient $b_0 = 3.8803$ means for instructors that had a hypothetical beauty score of 0, we would expect them to have on average a teaching score of 3.8803. In this case however, while the intercept has a mathematical interpretation when defining the regression line, there is no practical interpretation since score is an average of a panel of 6 students' ratings from 1 to 10, a bty_avg of 0 would be impossible. Furthermore, no instructors had a beauty score anywhere near 0 in this data.
+
+Of more interest is the **slope coefficient** associated with bty_avg: $b_{\text{bty avg}} = +0.0666$. This is a numerical quantity that summarizes the relationship between the outcome and explanatory variables. Note that the sign is positive, suggesting a positive relationship between beauty scores and teaching scores, meaning as beauty scores go up, so also do teaching scores go up. The slope's precise interpretation is:
+
+For every increase of 1 unit in bty_avg, there is an associated increase of, on average, 0.0666 units of score.
+
+Such interpretations need be carefully worded:
+
+** Correlation is not causation **
+We only stated that there is an associated increase, and not necessarily a causal increase. For example, perhaps it's not that beauty directly affects teaching scores, but instead individuals from wealthier backgrounds tend to have had better education and training, and hence have higher teaching scores, but these same individuals also have higher beauty scores. Avoiding such reasoning can be summarized by the adage "correlation is not necessarily causation." In other words, just because two variables are correlated, it doesn't mean one directly causes the other. 
+
+**We are talking about averages **
+We say that this associated increase is on average 0.0666 units of teaching score and not that the associated increase is exactly 0.0666 units of score across all values of bty_avg. This is because the slope is the average increase across all points as shown
+
+We can take our modeling one step further by getting something called 'the regression table'. After fitting the model using the lm(), we can use the `get_regression_table()` function from the moderndive package to generate our regression table:
+
+```{r generate_regression_table}
+# Fit regression model:
+score_model <- lm(score ~ bty_avg, data = evals_lc_6.1)
+# Get regression table:
+get_regression_table(score_model)
+```
+
