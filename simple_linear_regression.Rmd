@@ -1,0 +1,107 @@
+---
+title: "Simple Linear Regression"
+author: "Nassos Stylianou"
+date: "23/10/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Simple linear regression
+
+Using the evals dataset from the `moderndive` package, we can look at the effect of age on the score students give a teacher.
+
+Here's what our data looks like
+
+```{r glimpse_evals}
+library(moderndive)
+library(dplyr)
+glimpse(evals)
+
+```
+
+
+Plotting the distribution of age of teachers in our dataset.
+
+```{r age_histogram}
+library(ggplot2)
+ggplot(evals, aes(x = age)) +
+  geom_histogram(binwidth = 5) +
+  labs(x = "age", y = "count")
+```
+
+Some summary statistics from the age column.
+
+```{r summary_stats_age} 
+evals %>%
+  summarise(mean_age = mean(age),
+            median_age = median(age),
+            sd_age = sd(age))
+```
+
+## Plotting a best-fitting regression line
+
+Plotting a best-fitting regression line (least squares) to examine the relationship between score (our outcome/dependent $y$ variable) and age (our explanatory/predictor $x$ variable).
+
+In this case, we are running a regression with score as a function of the single explanatory/ predictor variable age.
+
+```{r regressionline}
+ggplot(evals, aes(x = age, y = score)) +
+  geom_point() +
+  labs(x = "age", y = "score") +
+  geom_smooth(method = "lm", se = FALSE)
+```
+The regression line shows a slight negative relationship between the two, as age increases, it looks like score goes down marginally. 
+
+To  explicity quantify the linear relationship between score and age using linear regression, we first have to fit the model. 
+
+```{r fit_model}
+model_score_age <- lm(score ~ age, data = evals)
+model_score_age
+```
+Once we hve fitted the model, we can use the `get_regression_table()` function of the `moderndive` package to get the regression table.
+
+```{r regression_table}
+get_regression_table(model_score_age)
+```
+
+
+## What does this mean?
+
+If you look at the value for the slope of the line, it is -0.006. So For every increase of one in age, you should observe an associated decrease (as the figure is negative) of on average 0.006 units in teaching score.
+
+## Predicting a teacher's score just from their age
+
+From the regression table and the intercept and slope, we can find the expected score based on their age. Say they are 44 years-old, the calculation we would have to do to get their score is:
+``` {r yhat_prediction}
+y_hat <- 4.462 + (-0.006 * 44)
+y_hat
+```
+If we found out that their score was 4.5, the residual for this prediction is the following:
+```{r residual_example}
+y <- 4.5
+y - y_hat
+```
+
+## Getting regression points
+Say we want to repeat this for all 463 teachers, we can automate this using the `get_regression_points()` function from the `moderndive` package.
+
+```{r}
+get_regression_points(model_score_age) %>%
+  head(10)
+
+```
+
+Here is how the contents of the score_hat column are actually being calculated:
+
+```{r score_hat_manual}
+get_regression_points(model_score_age) %>% 
+  mutate(score_hat_manual = 4.462 + (-0.006 * age)) %>%
+  head(10)
+
+get_regression_points(model_score_age) %>% 
+  mutate(residual_2 = score - score_hat)
+```
+
