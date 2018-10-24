@@ -72,6 +72,10 @@ get_regression_table(model_score_age)
 
 If you look at the value for the slope of the line, it is -0.006. So For every increase of one in age, you should observe an associated decrease (as the figure is negative) of on average 0.006 units in teaching score.
 
+p_value - The p value shows statistical significance. in this case it is 0.021, which is below 0.05 which is an (arbitrary) threshold, in some fields it may be lower. A p value of 0.021 shows that the change we see in the slope, is believed to be statistically significant
+
+std_error - read up on that - looks large as a standard error of 0.003 is about 50% of my slope. 
+
 ## Predicting a teacher's score just from their age
 
 From the regression table and the intercept and slope, we can find the expected score based on their age. Say they are 44 years-old, the calculation we would have to do to get their score is:
@@ -97,11 +101,22 @@ get_regression_points(model_score_age) %>%
 Here is how the contents of the score_hat column are actually being calculated:
 
 ```{r score_hat_manual}
-get_regression_points(model_score_age) %>% 
-  mutate(score_hat_manual = 4.462 + (-0.006 * age)) %>%
-  head(10)
+regression_points <- 
+  get_regression_points(model_score_age) %>% 
+  mutate(score_hat_manual = 4.462 + (-0.005938 * age))
 
 get_regression_points(model_score_age) %>% 
   mutate(residual_2 = score - score_hat)
+```
+A good idea would be to plot your residuals vs your predictor value to evaluate your model. We can see here that there are residuals at -2, which in a scale of 0 to 5, is quite a large error. 
+
+``` {r}
+ggplot(data = regression_points, aes(x = age, y = residual)) +
+  geom_point()
+```
+```{r}
+func <- function(age) {
+  intercept + age * slope 
+}
 ```
 
