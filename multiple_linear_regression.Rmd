@@ -1,0 +1,66 @@
+---
+title: "Multiple linear regression"
+author: "Nassos Stylianou"
+date: "05/11/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## What is multiple regression?
+
+So multiple regression is when we want to explore more than one predictor/explanatory $x$ variable to explain our outcome/dependent $y$ variable. 
+
+For example, if we have a dataset with information about houses including, price, location (a categorical variable if it is on the waterfront or not), size (in square metres), number of bedrooms and condition, we might want to examine the relationship between the price (our outcome variable) and both its size and its location, so whether or not it is on the waterfront.
+
+
+## What data will we work with?
+
+We will look at the `Credit` dataset in the `ISLR` library, where predictions are made on the credit card balance held by $n=400$  credit card holders. These predictions are based on information about them like income, credit limit, age and education level.
+
+A numerical outcome variable $y$, in this case credit card balance.
+Two explanatory variables:
+* A first numerical explanatory variable $x1$, their credit limit.
+* A second numerical explanatory variable  $x2$, their income (in thousands of dollars).
+
+```{r credit_dataset, echo=FALSE}
+pacman::p_load(ISLR, skimr)
+
+Credit <- Credit %>%
+  select(Balance, Limit, Income)
+
+glimpse(Credit)
+skim(Credit)
+```
+
+As our outcome $y$ variable Balance and the explanatory variables Limit and Rating are numerical, we can compute the correlation coefficient between pairs of these variables.
+
+```{r}
+Credit %>% 
+  get_correlation(Balance ~ Limit)
+Credit %>% 
+  get_correlation(Balance ~ Income)
+```
+The correlation of `Balance` with `Limit` is 0.862. This indicates a strong positive linear relationship, which makes sense as only individuals with large credit limits can accrue large credit card balances.
+
+`Balance` with `Income` is 0.464. This is suggestive of another positive linear relationship, although not as strong as the relationship between `Balance` and `Limit`.
+
+We can visualise these relationships as well.
+
+``` {r plots}
+ggplot(Credit, aes(x = Limit, y = Balance)) +
+  geom_point() +
+  labs(x = "Credit limit (in $)", y = "Credit card balance (in $)", 
+       title = "Relationship between balance and credit limit") +
+  geom_smooth(method = "lm", se = FALSE)
+  
+ggplot(Credit, aes(x = Income, y = Balance)) +
+  geom_point() +
+  labs(x = "Income (in $1000)", y = "Credit card balance (in $)", 
+       title = "Relationship between balance and income") +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+
